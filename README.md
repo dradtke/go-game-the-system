@@ -5,3 +5,12 @@ To that end, the Allegro backend and game state are abstracted away, and not int
 Scenes should be based off of `BaseScene` by including it as an embedded field; this allows new `Scene` implementations to fulfill the interface requirements without needing to implement every single available method. Any of them may be overridden, giving full flexibility for how scenes pay attention to game events.
 
 Maybe someday the code here will actually be useful to somebody. =)
+
+Building
+--------
+
+This code isn't structured like a normal Go program because it's not intended to be used as a package. If you'd like to try building it, clone the repo into a new directory, cd into it, and then run
+
+```
+$ GOPATH=${GOPATH}:`pwd` go build main.go
+```
