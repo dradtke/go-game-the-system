@@ -72,7 +72,7 @@ func GoTo(eventQueue *allegro.EventQueue, sc Scene) {
 	unregisterEventSources(eventQueue)
 	scene.Enter()
 	registerEventSources(eventQueue)
-	state.SceneLoaded = false
+	state.sceneLoaded = false
 	loading = make(chan bool, 1)
 	go func() {
 		scene.Load()
@@ -84,7 +84,7 @@ func Update() {
 	scene.Update(state)
 	select {
 	case <-loading:
-		state.SceneLoaded = true
+		state.sceneLoaded = true
 	default:
 		// not yet loaded
 	}
