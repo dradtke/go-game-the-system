@@ -1,26 +1,11 @@
-package shared
+package engine
 
 import (
 	"fmt"
 	"github.com/dradtke/go-allegro/allegro"
-	"github.com/dradtke/go-allegro/allegro/font"
 	"os"
 	"path/filepath"
 )
-
-var builtinFont *font.Font
-
-func init() {
-	if f, err := font.Builtin(); err == nil {
-		builtinFont = f
-	} else {
-		panic(err)
-	}
-}
-
-func BuiltinFont() *font.Font {
-	return builtinFont
-}
 
 func LoadImages(paths []string) map[string]*allegro.Bitmap {
 	images := make(map[string]*allegro.Bitmap)
