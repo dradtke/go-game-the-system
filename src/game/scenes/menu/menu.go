@@ -6,7 +6,6 @@ import (
 	"github.com/dradtke/go-allegro/allegro/font"
 	"game/engine"
 	"game/engine/widget"
-	"game/shared"
 	"time"
 )
 
@@ -22,9 +21,10 @@ type MenuScene struct {
 	widgets []widget.Widget
 }
 
-// Enter() is used for scene initialization. It should return a slice of
-// EventSources that should be added to the global event queue. They
-// will be automatically removed when the game changes scenes.
+// Enter() is used for scene initialization. After this method exits, any
+// calls to engine.RegisterEventSource() that occurred within it will then
+// have their respective event sources added to the global queue. They will
+// be automatically removed when the game changes scenes.
 func (s *MenuScene) Enter() {
 	fmt.Println("entering menu scene.")
 
@@ -33,9 +33,20 @@ func (s *MenuScene) Enter() {
 		engine.RegisterEventSource(s.dotTimer.EventSource())
 		s.dotTimer.Start()
 	}
+}
 
+// Load() should be used for images and other resources that may take a while
+// to load into memory. This method is always run in its own goroutine, and when
+// it finishes, the state's SceneLoaded() property will be set to true.
+func (s *MenuScene) Load() {
+	s.images = engine.LoadImages([]string{
+		"src/game/scenes/menu/img/button.png",
+		"src/game/scenes/menu/img/button-hover.png",
+	})
 	s.button = &widget.Button{
 		X: 200, Y: 200,
+		Base: s.images["button.png"],
+		Hover: s.images["button-hover.png"],
 		OnClick: func() {
 			fmt.Println("click!")
 		},
@@ -44,24 +55,13 @@ func (s *MenuScene) Enter() {
 		},
 	}
 	s.widgets = []widget.Widget{s.button}
+	time.Sleep(3 * time.Second) // fake an additional 3-second load time
 }
 
-// Load() should be used for images and other resources that may take a while
-// to load into memory. This method is always run in its own goroutine, and when
-// it finishes, the state's SceneLoaded() property will be set to true.
-func (s *MenuScene) Load() {
-	s.images = shared.LoadImages([]string{
-		"src/game/scenes/menu/img/button.png",
-		"src/game/scenes/menu/img/button-hover.png",
-	})
-	s.button.Base = s.images["button.png"]
-	s.button.Hover = s.images["button-hover.png"]
-	time.Sleep(3 * time.Second)
-}
-
+// Render() 
 func (s *MenuScene) Render(state *engine.State, delta float64) {
 	if !state.SceneLoaded() {
-		font.DrawText(shared.BuiltinFont(), allegro.MapRGB(0xFF, 0xFF, 0xFF),
+		font.DrawText(engine.BuiltinFont(), allegro.MapRGB(0xFF, 0xFF, 0xFF),
 			10, 10, font.ALIGN_LEFT, "Loading"+s.loadingDots)
 		return
 	}
