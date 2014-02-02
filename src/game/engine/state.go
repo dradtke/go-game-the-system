@@ -40,11 +40,16 @@ func (s *State) MouseY() int {
 	return s.current.MouseY
 }
 
+func (s *State) KeyDown(code allegro.KeyCode) bool {
+	return s.current.KeyDown[code]
+}
+
 // information regarding the game that can change between
 // ticks, and needs to be double-buffered
 type status struct {
 	MouseLeftDown, MouseRightDown, MouseOnScreen bool
 	MouseX, MouseY                               int
+	KeyDown                                      map[allegro.KeyCode]bool
 }
 
 var (
@@ -67,6 +72,8 @@ func Init(display *allegro.Display) {
 	state = new(State)
 	state.current = *new(status)
 	state.prev = *new(status)
+	state.current.KeyDown = make(map[allegro.KeyCode]bool)
+	state.prev.KeyDown = make(map[allegro.KeyCode]bool)
 	state.display = display
 }
 
@@ -87,10 +94,14 @@ func GoTo(eventQueue *allegro.EventQueue, sc Scene) {
 }
 
 func Update() {
+	defer func() {
+		sync(&state.current, &state.prev)
+	}()
 	scene.Update(state)
 	select {
 	case <-loading:
 		state.sceneLoaded = true
+		return
 	default:
 		// not yet loaded
 	}
@@ -106,8 +117,6 @@ func Update() {
 	} else if !state.current.MouseRightDown && state.prev.MouseRightDown {
 		scene.OnRightRelease(state)
 	}
-
-	sync(&state.current, &state.prev)
 }
 
 // TODO: verify that this is the correct value for delta
@@ -150,6 +159,13 @@ func HandleEvent(event *allegro.Event) (unhandled bool) {
 		state.current.MouseOnScreen = true
 		state.current.MouseX = event.Mouse.X
 		state.current.MouseY = event.Mouse.Y
+
+	case allegro.EVENT_KEY_DOWN:
+		state.current.KeyDown[event.Keyboard.KeyCode] = true
+
+	case allegro.EVENT_KEY_UP:
+		state.current.KeyDown[event.Keyboard.KeyCode] = false
+
 	default:
 		unhandled = true
 	}

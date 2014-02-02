@@ -2,10 +2,11 @@ package menu
 
 import (
 	"fmt"
+	"game/engine"
 	"github.com/dradtke/go-allegro/allegro"
 	"github.com/dradtke/go-allegro/allegro/font"
 	prim "github.com/dradtke/go-allegro/allegro/primitives"
-	"game/engine"
+	"time"
 )
 
 type MenuScene struct {
@@ -14,12 +15,12 @@ type MenuScene struct {
 
 	dotTimer    *allegro.Timer
 	loadingDots string
-	square *square
+	square      *square
 }
 
 type square struct {
+	engine.Entity
 	img *allegro.Bitmap
-	x, y float32
 	dir int8
 }
 
@@ -28,8 +29,6 @@ type square struct {
 // have their respective event sources added to the global queue. They will
 // be automatically removed when the game changes scenes.
 func (s *MenuScene) Enter() {
-	fmt.Println("entering menu scene.")
-
 	var err error
 	if s.dotTimer, err = allegro.CreateTimer(0.5); err == nil {
 		engine.RegisterEventSource(s.dotTimer.EventSource())
@@ -41,40 +40,41 @@ func (s *MenuScene) Enter() {
 // to load into memory. This method is always run in its own goroutine, and when
 // it finishes, the state's SceneLoaded() property will be set to true.
 func (s *MenuScene) Load(state *engine.State) {
-	s.square = &square{img: allegro.CreateBitmap(30, 30), x: 0, y: 100, dir: 1}
-	allegro.SetTargetBitmap(s.square.img)
-	prim.DrawFilledRectangle(prim.Point{X:0, Y:0}, prim.Point{X:30, Y:30}, allegro.MapRGB(0, 0xFF, 0))
-	allegro.SetTargetBackbuffer(state.Display())
-	//time.Sleep(1 * time.Second) // fake an additional 3-second load time
+	s.square = &square{
+		engine.Entity{X: 100, Y: 100},
+		allegro.CreateBitmap(30, 30), // img
+		1, // dir
+	}
+	s.square.img.AsTarget(func() {
+		prim.DrawFilledRectangle(prim.Point{X: 0, Y: 0}, prim.Point{X: 30, Y: 30}, allegro.MapRGB(0, 0xFF, 0))
+	})
+	time.Sleep(2 * time.Second) // fake an additional 2-second load time
 }
 
 func (s *MenuScene) Update(state *engine.State) {
-	if (!state.SceneLoaded()) {
+	if !state.SceneLoaded() {
 		return
 	}
-	s.square.x += 5 * float32(s.square.dir)
-	if s.square.dir > 0 {
-		if (s.square.x + 30) >= float32(state.Display().Width()) {
-			s.square.x = float32(state.Display().Width() - 30)
-			s.square.dir = -1
-		}
-	} else if s.square.dir < 0 {
-		if s.square.x <= 0 {
-			s.square.x = 0
-			s.square.dir = 1
-		}
+	if state.KeyDown(allegro.KEY_UP) {
+		s.square.Move(0, -5)
+	} else if state.KeyDown(allegro.KEY_DOWN) {
+		s.square.Move(0, 5)
+	} else if state.KeyDown(allegro.KEY_RIGHT) {
+		s.square.Move(5, 0)
+	} else if state.KeyDown(allegro.KEY_LEFT) {
+		s.square.Move(-5, 0)
 	}
 }
 
-// Render() 
+// Render()
 func (s *MenuScene) Render(state *engine.State, delta float32) {
 	if !state.SceneLoaded() {
 		font.DrawText(engine.BuiltinFont(), allegro.MapRGB(0xFF, 0xFF, 0xFF),
 			10, 10, font.ALIGN_LEFT, "Loading"+s.loadingDots)
 		return
 	}
-	square_x := s.square.x + (float32(5 * int(s.square.dir)) * delta)
-	s.square.img.Draw(square_x, s.square.y, allegro.FLIP_NONE)
+	square_x := s.square.X + (float32(5*int(s.square.dir)) * delta)
+	s.square.img.Draw(square_x, s.square.Y, allegro.FLIP_NONE)
 }
 
 func (s *MenuScene) Leave() {
@@ -86,9 +86,9 @@ func (s *MenuScene) OnLeftPress(state *engine.State) {
 		return
 	}
 	/*
-	for _, w := range s.widgets {
-		w.Press(state)
-	}
+		for _, w := range s.widgets {
+			w.Press(state)
+		}
 	*/
 }
 
@@ -97,9 +97,9 @@ func (s *MenuScene) OnLeftRelease(state *engine.State) {
 		return
 	}
 	/*
-	for _, w := range s.widgets {
-		w.Release(state)
-	}
+		for _, w := range s.widgets {
+			w.Release(state)
+		}
 	*/
 }
 

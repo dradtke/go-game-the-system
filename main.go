@@ -1,16 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"game/engine"
 	scenes "game/scenes/menu"
 	"github.com/dradtke/go-allegro/allegro"
 	"github.com/dradtke/go-allegro/allegro/font"
 	"github.com/dradtke/go-allegro/allegro/image"
+	"os"
+	"runtime/pprof"
 	"time"
 )
 
 const FPS int = 60
+
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 func main() {
 	var (
@@ -19,6 +23,8 @@ func main() {
 		fpsTimer   *allegro.Timer
 		err        error
 	)
+
+	flag.Parse()
 
 	// Event Queue
 	if eventQueue, err = allegro.CreateEventQueue(); err == nil {
@@ -49,6 +55,18 @@ func main() {
 		panic(err)
 	}
 
+	// Keyboard
+	if err = allegro.InstallKeyboard(); err == nil {
+		var keyboardEventSource *allegro.EventSource
+		if keyboardEventSource, err = allegro.KeyboardEventSource(); err == nil {
+			eventQueue.RegisterEventSource(keyboardEventSource)
+		} else {
+			panic(err)
+		}
+	} else {
+		panic(err)
+	}
+
 	// FPS Timer
 	secondsPerFrame := float64(1) / float64(FPS)
 	if fpsTimer, err = allegro.CreateTimer(secondsPerFrame); err == nil {
@@ -65,11 +83,20 @@ func main() {
 	engine.Init(display)
 	engine.GoTo(eventQueue, &scenes.MenuScene{Name: "main"})
 
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
 	var (
-		running    bool      = true
-		lastUpdate time.Time = time.Now()
-		step       float32   = float32(secondsPerFrame * float64(time.Second))
-		lag        float32   = 0
+		running    bool          = true
+		lastUpdate time.Time     = time.Now()
+		step       time.Duration = time.Duration(secondsPerFrame * float64(time.Second))
+		lag        time.Duration = 0
 	)
 
 	fpsTimer.Start()
@@ -86,17 +113,12 @@ func main() {
 			now := time.Now()
 			elapsed := now.Sub(lastUpdate)
 			lastUpdate = now
-			lag += float32(elapsed)
-			numUpdates := 0
+			lag += elapsed
 			for lag >= step {
 				engine.Update()
 				lag -= step
-				numUpdates++
 			}
-			if numUpdates > 1 {
-				fmt.Printf("%d updates!\n", numUpdates)
-			}
-			engine.Render(lag / step)
+			engine.Render(float32(lag / step))
 
 		case allegro.EVENT_DISPLAY_CLOSE:
 			running = false
