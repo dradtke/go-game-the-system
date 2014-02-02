@@ -6,9 +6,14 @@ import (
 )
 
 type State struct {
-	current status
-	prev    status
+	current     status
+	prev        status
+	display     *allegro.Display
 	sceneLoaded bool
+}
+
+func (s *State) Display() *allegro.Display {
+	return s.display
 }
 
 func (s *State) SceneLoaded() bool {
@@ -43,8 +48,8 @@ type status struct {
 }
 
 var (
-	state        *State
-	scene        Scene
+	state *State
+	scene Scene
 
 	loading chan bool
 )
@@ -58,10 +63,11 @@ func sync(from *status, to *status) {
 	}
 }
 
-func Init() {
+func Init(display *allegro.Display) {
 	state = new(State)
 	state.current = *new(status)
 	state.prev = *new(status)
+	state.display = display
 }
 
 func GoTo(eventQueue *allegro.EventQueue, sc Scene) {
@@ -75,7 +81,7 @@ func GoTo(eventQueue *allegro.EventQueue, sc Scene) {
 	state.sceneLoaded = false
 	loading = make(chan bool, 1)
 	go func() {
-		scene.Load()
+		scene.Load(state)
 		loading <- true
 	}()
 }
@@ -105,7 +111,7 @@ func Update() {
 }
 
 // TODO: verify that this is the correct value for delta
-func Render(delta float64) {
+func Render(delta float32) {
 	allegro.ClearToColor(allegro.MapRGB(0, 0, 0))
 	allegro.HoldBitmapDrawing(true)
 	scene.Render(state, delta)

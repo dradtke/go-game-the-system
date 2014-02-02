@@ -1,17 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"game/engine"
+	scenes "game/scenes/menu"
 	"github.com/dradtke/go-allegro/allegro"
 	"github.com/dradtke/go-allegro/allegro/font"
 	"github.com/dradtke/go-allegro/allegro/image"
-	"game/engine"
-	scenes "game/scenes/menu"
 	"time"
 )
 
-const (
-	FPS int = 60
-)
+const FPS int = 60
 
 func main() {
 	var (
@@ -63,17 +62,18 @@ func main() {
 	font.Init()
 	image.Init()
 
-	engine.Init()
+	engine.Init(display)
 	engine.GoTo(eventQueue, &scenes.MenuScene{Name: "main"})
+
+	var (
+		running    bool      = true
+		lastUpdate time.Time = time.Now()
+		step       float32   = float32(secondsPerFrame * float64(time.Second))
+		lag        float32   = 0
+	)
 
 	fpsTimer.Start()
 
-	var (
-		running    bool          = true
-		lastUpdate time.Time     = time.Now()
-		step       time.Duration = time.Duration(secondsPerFrame * float64(time.Second))
-		lag        time.Duration
-	)
 	for running {
 		event := eventQueue.WaitForEvent(false)
 		if !engine.HandleEvent(event) {
@@ -82,17 +82,21 @@ func main() {
 
 		switch event.Type {
 		case allegro.EVENT_TIMER:
-			// We don't care what the count is at, only that it ticked.
-			// Reset it to 0 to prevent a possible eventual overflow.
 			fpsTimer.SetCount(0)
 			now := time.Now()
 			elapsed := now.Sub(lastUpdate)
-			lag += elapsed
+			lastUpdate = now
+			lag += float32(elapsed)
+			numUpdates := 0
 			for lag >= step {
 				engine.Update()
 				lag -= step
+				numUpdates++
 			}
-			engine.Render(float64(lag) / float64(step))
+			if numUpdates > 1 {
+				fmt.Printf("%d updates!\n", numUpdates)
+			}
+			engine.Render(lag / step)
 
 		case allegro.EVENT_DISPLAY_CLOSE:
 			running = false
