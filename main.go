@@ -1,5 +1,15 @@
 package main
 
+// TODO:
+// 	1. Refactor "engine" out (everything should be under "game")
+//  2. Define Entity and Object interfaces
+//		- Entity is something update-able
+//		- Object is something visible on screen
+//  3. Add game.AddObject() method?
+//  4. Rework widgets to be auto-updated (add game.AddWidget()?)
+//  5. Implement double-pass updates
+//  6. Come up with a consistent scheme for rounding
+
 import (
 	"flag"
 	"game/engine"
@@ -8,23 +18,30 @@ import (
 	"github.com/dradtke/go-allegro/allegro/font"
 	"github.com/dradtke/go-allegro/allegro/image"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"time"
 )
 
 const FPS int = 60
 
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var (
+	cpuprofile = flag.String("cpuprofile", "", "output a cpuprofile to...")
+	memprofile = flag.String("memprofile", "", "output a memprofile to...")
+)
 
 func main() {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	flag.Parse()
+
 	var (
 		display    *allegro.Display
 		eventQueue *allegro.EventQueue
 		fpsTimer   *allegro.Timer
 		err        error
 	)
-
-	flag.Parse()
 
 	// Event Queue
 	if eventQueue, err = allegro.CreateEventQueue(); err == nil {
@@ -68,7 +85,7 @@ func main() {
 	}
 
 	// FPS Timer
-	secondsPerFrame := float64(1) / float64(FPS)
+	secondsPerFrame := 1 / float64(FPS)
 	if fpsTimer, err = allegro.CreateTimer(secondsPerFrame); err == nil {
 		defer fpsTimer.Destroy()
 		eventQueue.RegisterEventSource(fpsTimer.EventSource())
@@ -93,25 +110,42 @@ func main() {
 	}
 
 	var (
-		running    bool          = true
-		lastUpdate time.Time     = time.Now()
-		step       time.Duration = time.Duration(secondsPerFrame * float64(time.Second))
-		lag        time.Duration = 0
+		event       allegro.Event
+		running     bool          = true
+		needsUpdate bool          = false
+		lastUpdate  time.Time     = time.Now()
+		step        time.Duration = time.Duration(secondsPerFrame * float64(time.Second))
+		lag         time.Duration
+		now         time.Time
+		elapsed     time.Duration
 	)
 
 	fpsTimer.Start()
 
-	for running {
-		event := eventQueue.WaitForEvent(false)
-		if !engine.HandleEvent(event) {
+	for {
+		eventQueue.WaitForEvent(&event)
+		if !engine.HandleEvent(&event) {
 			continue
 		}
 
 		switch event.Type {
 		case allegro.EVENT_TIMER:
-			fpsTimer.SetCount(0)
-			now := time.Now()
-			elapsed := now.Sub(lastUpdate)
+			if event.Source == fpsTimer.EventSource() {
+				needsUpdate = true
+				fpsTimer.SetCount(0)
+			}
+
+		case allegro.EVENT_DISPLAY_CLOSE:
+			running = false
+		}
+
+		if !running {
+			break
+		}
+
+		if needsUpdate && eventQueue.IsEmpty() {
+			now = time.Now()
+			elapsed = now.Sub(lastUpdate)
 			lastUpdate = now
 			lag += elapsed
 			for lag >= step {
@@ -119,9 +153,7 @@ func main() {
 				lag -= step
 			}
 			engine.Render(float32(lag / step))
-
-		case allegro.EVENT_DISPLAY_CLOSE:
-			running = false
+			needsUpdate = false
 		}
 	}
 }

@@ -55,6 +55,7 @@ type status struct {
 var (
 	state *State
 	scene Scene
+	entities []Entity
 
 	loading chan bool
 )
@@ -83,6 +84,7 @@ func GoTo(eventQueue *allegro.EventQueue, sc Scene) {
 	}
 	scene = sc
 	unregisterEventSources(eventQueue)
+	entities = make([]Entity, 0)
 	scene.Enter()
 	registerEventSources(eventQueue)
 	state.sceneLoaded = false
@@ -97,7 +99,14 @@ func Update() {
 	defer func() {
 		sync(&state.current, &state.prev)
 	}()
+
+	if state.sceneLoaded {
+		for _, e := range entities {
+			e.Update(state)
+		}
+	}
 	scene.Update(state)
+
 	select {
 	case <-loading:
 		state.sceneLoaded = true
@@ -123,6 +132,11 @@ func Update() {
 func Render(delta float32) {
 	allegro.ClearToColor(allegro.MapRGB(0, 0, 0))
 	allegro.HoldBitmapDrawing(true)
+	if state.sceneLoaded {
+		for _, e := range entities {
+			e.Render(state, delta)
+		}
+	}
 	scene.Render(state, delta)
 	allegro.HoldBitmapDrawing(false)
 	allegro.FlipDisplay()
@@ -132,6 +146,7 @@ func HandleEvent(event *allegro.Event) (unhandled bool) {
 	if !scene.HandleEvent(state, event) {
 		return false
 	}
+
 	switch event.Type {
 	case allegro.EVENT_MOUSE_BUTTON_DOWN:
 		switch event.Mouse.Button {
