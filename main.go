@@ -37,10 +37,11 @@ func main() {
 	flag.Parse()
 
 	var (
-		display    *allegro.Display
-		eventQueue *allegro.EventQueue
-		fpsTimer   *allegro.Timer
-		err        error
+		display        *allegro.Display
+		eventQueue     *allegro.EventQueue
+		fpsTimer       *allegro.Timer
+		fpsTimerSource *allegro.EventSource
+		err            error
 	)
 
 	// Event Queue
@@ -88,7 +89,8 @@ func main() {
 	secondsPerFrame := 1 / float64(FPS)
 	if fpsTimer, err = allegro.CreateTimer(secondsPerFrame); err == nil {
 		defer fpsTimer.Destroy()
-		eventQueue.RegisterEventSource(fpsTimer.EventSource())
+		fpsTimerSource = fpsTimer.EventSource()
+		eventQueue.RegisterEventSource(fpsTimerSource)
 	} else {
 		panic(err)
 	}
@@ -124,19 +126,17 @@ func main() {
 
 	for {
 		eventQueue.WaitForEvent(&event)
-		if !engine.HandleEvent(&event) {
-			continue
-		}
-
 		switch event.Type {
 		case allegro.EVENT_TIMER:
-			if event.Source == fpsTimer.EventSource() {
+			if event.Source == fpsTimerSource {
 				needsUpdate = true
-				fpsTimer.SetCount(0)
 			}
 
 		case allegro.EVENT_DISPLAY_CLOSE:
 			running = false
+
+		default:
+			engine.HandleEvent(&event)
 		}
 
 		if !running {
