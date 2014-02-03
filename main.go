@@ -1,19 +1,13 @@
 package main
 
 // TODO:
-// 	1. Refactor "engine" out (everything should be under "game")
-//  2. Define Entity and Object interfaces
-//		- Entity is something update-able
-//		- Object is something visible on screen
-//  3. Add game.AddObject() method?
-//  4. Rework widgets to be auto-updated (add game.AddWidget()?)
-//  5. Implement double-pass updates
-//  6. Come up with a consistent scheme for rounding
+//  1. Implement double-pass updates
+//  2. Come up with a consistent scheme for rounding
 
 import (
 	"flag"
-	"game/engine"
-	scenes "game/scenes/menu"
+	"game"
+	scenes "scenes/menu"
 	"github.com/dradtke/go-allegro/allegro"
 	"github.com/dradtke/go-allegro/allegro/font"
 	"github.com/dradtke/go-allegro/allegro/image"
@@ -23,7 +17,7 @@ import (
 	"time"
 )
 
-const FPS int = 60
+const FPS = 60
 
 var (
 	cpuprofile = flag.String("cpuprofile", "", "output a cpuprofile to...")
@@ -99,8 +93,8 @@ func main() {
 	font.Init()
 	image.Init()
 
-	engine.Init(display)
-	engine.GoTo(eventQueue, &scenes.MenuScene{Name: "main"})
+	game.Init(display)
+	game.GoTo(eventQueue, &scenes.MenuScene{Name: "main"})
 
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -136,7 +130,7 @@ func main() {
 			running = false
 
 		default:
-			engine.HandleEvent(&event)
+			game.HandleEvent(&event)
 		}
 
 		if !running {
@@ -149,10 +143,10 @@ func main() {
 			lastUpdate = now
 			lag += elapsed
 			for lag >= step {
-				engine.Update()
+				game.Update()
 				lag -= step
 			}
-			engine.Render(float32(lag / step))
+			game.Render(float32(lag / step))
 			needsUpdate = false
 		}
 	}
