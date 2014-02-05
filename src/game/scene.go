@@ -17,6 +17,8 @@ type Scene interface {
 	OnRightPress(*State)
 	OnLeftRelease(*State)
 	OnRightRelease(*State)
+
+	TryQuit() bool
 }
 
 type BaseScene struct{}
@@ -35,3 +37,5 @@ func (s *BaseScene) OnLeftPress(state *State)    {}
 func (s *BaseScene) OnRightPress(state *State)   {}
 func (s *BaseScene) OnLeftRelease(state *State)  {}
 func (s *BaseScene) OnRightRelease(state *State) {}
+
+func (s *BaseScene) TryQuit() bool { return true }

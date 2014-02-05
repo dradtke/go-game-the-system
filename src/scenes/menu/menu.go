@@ -34,9 +34,9 @@ func (s *MenuScene) Enter() {
 // it finishes, the state's SceneLoaded() property will be set to true.
 func (s *MenuScene) Load(state *game.State) {
 	images := game.LoadImages([]string{
-		"src/game/scenes/menu/img/orb/norm.png",
-		"src/game/scenes/menu/img/orb/lit.png",
-		"src/game/scenes/menu/img/orb/down.png",
+		"src/scenes/menu/img/orb/norm.png",
+		"src/scenes/menu/img/orb/lit.png",
+		"src/scenes/menu/img/orb/down.png",
 	})
 	game.AddEntity(&widget.Button{
 		Base: images["norm.png"],
@@ -46,17 +46,19 @@ func (s *MenuScene) Load(state *game.State) {
 		Y: 200,
 		Radius: 45,
 		Bound: widget.Circle,
-		OnHover: func() {
-			fmt.Println("hover")
-		},
-		OnPress: func() {
-			fmt.Println("press")
-		},
 		OnClick: func() {
-			fmt.Println("click")
+			game.Quit()
 		},
 	})
-	time.Sleep(3 * time.Second) // fake an additional 2-second load time
+	game.AddEntity(&widget.Input{
+		X: 10,
+		Y: 10,
+		Color: allegro.MapRGB(0xFF, 0xFF, 0xFF),
+		Align: font.ALIGN_LEFT,
+		Font: game.BuiltinFont(),
+		MaxLength: 10,
+	})
+	time.Sleep(3 * time.Second) // fake an additional 3-second load time
 	s.dotTimer.Stop()
 }
 

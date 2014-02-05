@@ -70,5 +70,8 @@ func HandleEvent(event *allegro.Event) {
 
 	case allegro.EVENT_KEY_UP:
 		state.current.KeyDown[event.Keyboard.KeyCode] = false
+
+	case allegro.EVENT_KEY_CHAR:
+		updateText(event.Keyboard.KeyCode, rune(event.Keyboard.Unichar))
 	}
 }

@@ -53,14 +53,6 @@ type status struct {
 	KeyDown                                      map[allegro.KeyCode]bool
 }
 
-var (
-	state *State
-	scene Scene
-	entities []Entity
-
-	loading chan bool
-)
-
 func sync(from *status, to *status) {
 	from_val := reflect.ValueOf(from).Elem()
 	to_val := reflect.ValueOf(to).Elem()

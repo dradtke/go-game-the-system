@@ -88,6 +88,9 @@ func (b *Button) Update(state *game.State) {
 }
 
 func (b *Button) Render(state *game.State, delta float32) {
+	if b.Base == nil {
+		return
+	}
 	if b.width == 0 {
 		b.width = b.Base.Width()
 	}

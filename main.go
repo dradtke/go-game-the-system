@@ -107,7 +107,6 @@ func main() {
 
 	var (
 		event       allegro.Event
-		running     bool          = true
 		needsUpdate bool          = false
 		lastUpdate  time.Time     = time.Now()
 		step        time.Duration = time.Duration(secondsPerFrame * float64(time.Second))
@@ -121,19 +120,22 @@ func main() {
 	for {
 		eventQueue.WaitForEvent(&event)
 		switch event.Type {
+
+		case allegro.EVENT_DISPLAY_CLOSE:
+			game.TryQuit()
+
 		case allegro.EVENT_TIMER:
 			if event.Source == fpsTimerSource {
 				needsUpdate = true
+				break
 			}
-
-		case allegro.EVENT_DISPLAY_CLOSE:
-			running = false
+			fallthrough
 
 		default:
 			game.HandleEvent(&event)
 		}
 
-		if !running {
+		if game.ShouldQuit() {
 			break
 		}
 
