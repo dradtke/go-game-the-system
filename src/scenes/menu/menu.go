@@ -56,7 +56,6 @@ func (s *MenuScene) Load(state *game.State) {
 		Color: allegro.MapRGB(0xFF, 0xFF, 0xFF),
 		Align: font.ALIGN_LEFT,
 		Font: game.BuiltinFont(),
-		MaxLength: 10,
 	})
 	time.Sleep(3 * time.Second) // fake an additional 3-second load time
 	s.dotTimer.Stop()
