@@ -40,8 +40,8 @@ func (b *Button) IsHovering(state *game.State) bool {
 			return true
 		}
 	case Circle:
-		x := float32(mouse_x) - float32(b.X + float32(b.width/2))
-		y := float32(mouse_y) - float32(b.Y + float32(b.height/2))
+		x := float32(mouse_x) - float32(b.X+float32(b.width/2))
+		y := float32(mouse_y) - float32(b.Y+float32(b.height/2))
 		dist := math.Sqrt(float64(x*x) + float64(y*y))
 		if (b.Radius != 0 && dist <= float64(b.Radius)) || (b.Radius == 0 && dist <= float64(b.width)) {
 			return true
