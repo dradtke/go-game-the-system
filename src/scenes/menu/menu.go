@@ -39,23 +39,23 @@ func (s *MenuScene) Load(state *game.State) {
 		"src/scenes/menu/img/orb/down.png",
 	})
 	game.AddEntity(&widget.Button{
-		Base: images["norm.png"],
-		Hover: images["lit.png"],
+		Base:    images["norm.png"],
+		Hover:   images["lit.png"],
 		Pressed: images["down.png"],
-		X: 300,
-		Y: 200,
-		Radius: 45,
-		Bound: widget.Circle,
+		X:       300,
+		Y:       200,
+		Radius:  45,
+		Bound:   widget.Circle,
 		OnClick: func() {
 			game.Quit()
 		},
 	})
 	game.AddEntity(&widget.Input{
-		X: 10,
-		Y: 10,
+		X:     10,
+		Y:     10,
 		Color: allegro.MapRGB(0xFF, 0xFF, 0xFF),
 		Align: font.ALIGN_LEFT,
-		Font: game.BuiltinFont(),
+		Font:  game.BuiltinFont(),
 	})
 	time.Sleep(3 * time.Second) // fake an additional 3-second load time
 	s.dotTimer.Stop()

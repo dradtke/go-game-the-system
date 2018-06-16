@@ -23,13 +23,13 @@ type Scene interface {
 
 type BaseScene struct{}
 
-func (s *BaseScene) Enter() {}
-func (s *BaseScene) Leave() {}
-func (s *BaseScene) Load(*State)  {}
+func (s *BaseScene) Enter()      {}
+func (s *BaseScene) Leave()      {}
+func (s *BaseScene) Load(*State) {}
 func (s *BaseScene) HandleEvent(state *State, event *allegro.Event) bool {
 	return true
 }
-func (s *BaseScene) Update(state *State) {}
+func (s *BaseScene) Update(state *State)                {}
 func (s *BaseScene) Render(state *State, delta float32) {}
 
 // events

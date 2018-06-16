@@ -7,13 +7,13 @@ package main
 import (
 	"flag"
 	"game"
-	scenes "scenes/menu"
 	"github.com/dradtke/go-allegro/allegro"
 	"github.com/dradtke/go-allegro/allegro/font"
 	"github.com/dradtke/go-allegro/allegro/image"
 	"os"
 	"runtime"
 	"runtime/pprof"
+	scenes "scenes/menu"
 	"time"
 )
 
